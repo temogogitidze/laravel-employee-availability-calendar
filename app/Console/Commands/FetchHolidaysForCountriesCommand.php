@@ -30,15 +30,25 @@ class FetchHolidaysForCountriesCommand extends Command
         $response = file_get_contents($url);
         $holidays = json_decode($response, true);
 
+        $holidayData = [];
+
         foreach ($holidays as $holiday) {
-            PublicHoliday::create([
+            $holidayData[] = [
                 'name' => $holiday['name'][0]['text'],
                 'start_date' => $holiday['startDate'],
                 'end_date' => $holiday['endDate'],
+                'country' => $countryCode,
                 'holiday_id' => $holiday['id'],
-            ]);
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
         }
 
-        dd($holidays);
+        if (!empty($holidayData)) {
+            PublicHoliday::insert($holidayData);
+            $this->info('Public holidays fetched and stored successfully.');
+        } else {
+            $this->info('No public holidays found.');
+        }
     }
 }
