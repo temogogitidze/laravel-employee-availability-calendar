@@ -20,6 +20,8 @@ class PublicHolidayController extends Controller
 
         $query = $this->model->newQuery();
 
+        // common for users from same country
+
         if ($validatedData['country']) {
             $query->where('country', $validatedData['country']);
         }
