@@ -15,7 +15,7 @@ class StoreCalendarEventRequest extends FormRequest
         return [
             'user_id' => ['required', 'exists:users,id', 'integer'],
             'start_date' => ['required'],
-            'end_time' => ['required'],
+            'end_date' => ['required'],
             'event_type' => ['required', 'string', 'max:255']
         ];
     }

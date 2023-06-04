@@ -21,7 +21,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('public-holidays', [PublicHolidayController::class, 'index'])->name('public_holidays.get');
-Route::post('calendar-events', [CalendarEventController::class, 'post'])->name('calendar_event.post');
+Route::post('calendar-events', [CalendarEventController::class, 'store'])->name('calendar_event.post');
+Route::get('calendar-events', [CalendarEventController::class, 'index'])->name('calendar_event.get');
 
 // get all reserved days for user
 //Route::get('get-user-calendar', [PublicHolidayController::class, 'index'])->name('public_holidays.get');
