@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PublicHolidayController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,4 +19,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('public-holidays')->name('public_holidays.get');
+Route::get('public-holidays', [PublicHolidayController::class, 'index'])->name('public_holidays.get');
