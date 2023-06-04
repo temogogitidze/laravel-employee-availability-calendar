@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('calendar_events', function (Blueprint $table) {
+        Schema::create('public_holidays', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->date('start_date');
@@ -19,6 +19,6 @@ return new class extends Migration
     }
     public function down(): void
     {
-        Schema::dropIfExists('calendar_events');
+        Schema::dropIfExists('public_holidays');
     }
 };
