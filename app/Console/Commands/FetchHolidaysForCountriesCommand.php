@@ -32,10 +32,10 @@ class FetchHolidaysForCountriesCommand extends Command
 
         foreach ($holidays as $holiday) {
             PublicHoliday::create([
-                'name' => $holiday['name'],
-                'start_date' => $holidays['startDate'],
-                'end_date' => $holidays['endDate'],
-                'holiday_id' => $holidays['id'],
+                'name' => $holiday['name'][0]['text'],
+                'start_date' => $holiday['startDate'],
+                'end_date' => $holiday['endDate'],
+                'holiday_id' => $holiday['id'],
             ]);
         }
 
