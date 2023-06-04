@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('public_holidays', function (Blueprint $table) {
             $table->id();
+            $table->string('holiday_id');
             $table->string('name');
             $table->date('start_date');
             $table->date('end_date');
-            $table->text('description');
             $table->timestamps();
         });
     }

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\PublicHoliday;
 use Illuminate\Console\Command;
 
 class FetchHolidaysForCountriesCommand extends Command
@@ -28,6 +29,15 @@ class FetchHolidaysForCountriesCommand extends Command
 
         $response = file_get_contents($url);
         $holidays = json_decode($response, true);
+
+        foreach ($holidays as $holiday) {
+            PublicHoliday::create([
+                'name' => $holiday['name'],
+                'start_date' => $holidays['startDate'],
+                'end_date' => $holidays['endDate'],
+                'holiday_id' => $holidays['id'],
+            ]);
+        }
 
         dd($holidays);
     }
