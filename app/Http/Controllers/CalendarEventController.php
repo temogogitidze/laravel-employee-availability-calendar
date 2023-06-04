@@ -24,6 +24,13 @@ class CalendarEventController extends Controller
 
     public function index(IndexCalendarEventRequest $request): AnonymousResourceCollection
     {
+        // get public holidays according user's country here and pass to resource
         return CalendarEventResource::collection($this->model->where('user_id', 1)->get());
     }
+
+    // update value should be converted in unix timestamp and compared in events table records for request user
+//    public function update(IndexCalendarEventRequest $request): AnonymousResourceCollection
+//    {
+//       compare here ...
+//    }
 }
