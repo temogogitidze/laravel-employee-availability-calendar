@@ -14,7 +14,7 @@ class IndexPublicHolidayRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'country' => ['nullable', 'exists:public_holidays,country', 'max:255']
         ];
     }
 }
