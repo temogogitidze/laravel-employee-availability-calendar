@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCalendarEventRequest;
 use App\Http\Resources\CalendarEventResource;
 use App\Models\CalendarEvent;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class CalendarEventController extends Controller
 {
@@ -15,16 +16,15 @@ class CalendarEventController extends Controller
     {
     }
 
-    public function store(StoreCalendarEventRequest $request): void
+    public function store(StoreCalendarEventRequest $request)
     {
         $validatedData = $request->validated();
 
         if ($this->isEmployeeAvailable($validatedData)) {
             // Store the event in the database
             dd('stored');
-//            $this->model->create($validatedData);
         } else {
-            dd('employer is not available for chosen time section');
+            dd('employer is not available for the chosen time section');
         }
     }
 
@@ -34,38 +34,32 @@ class CalendarEventController extends Controller
         return CalendarEventResource::collection($this->getUserAssotiatedEvents());
     }
 
-    function isEmployeeAvailable($validatedData): bool
+    public function isEmployeeAvailable($validatedData)
     {
-        $userEvents = $this->getUserAssotiatedEvents()->toArray();
-
-        return !$this->checkOverlapRecursive($validatedData, $userEvents);
-    }
-
-    function checkOverlapRecursive($validatedData, $userEvents): bool
-    {
-        return array_reduce($userEvents, function ($carry, $event) use ($validatedData) {
-            return $carry || $this->checkOverlap($validatedData, $event);
-        }, false);
-    }
-
-    function checkOverlap($validatedData, $userEvent): bool
-    {
+        $userId = 1;
         $requestedStartDate = $validatedData['start_date'];
         $requestedEndDate = $validatedData['end_date'];
 
-        $userStartDate = $userEvent['start_date'];
-        $userEndDate = $userEvent['end_date'];
-
-        if ($requestedStartDate <= $userStartDate && $requestedEndDate >= $userEndDate) {
-            return true;
-        } elseif ($requestedEndDate >= $userStartDate && $requestedEndDate <= $userEndDate) {
-            return true;
-        } elseif ($requestedStartDate < $userStartDate && $requestedEndDate > $userEndDate) {
-            return true;
-        } else {
-            return false;
-        }
+        $overlapCount = DB::select("
+        SELECT COUNT(*) AS overlap_count
+        FROM calendar_events
+        WHERE user_id = :userId
+        AND (
+            (start_date <= :endDate AND end_date >= :startDate)
+            OR (end_date >= :startDate1 AND end_date <= :endDate1)
+            OR (start_date < :startDate2 AND end_date > :endDate2)
+        )", [
+            'userId' => $userId,
+            'startDate' => $requestedStartDate,
+            'endDate' => $requestedEndDate,
+            'startDate1' => $requestedStartDate,
+            'endDate1' => $requestedEndDate,
+            'startDate2' => $requestedStartDate,
+            'endDate2' => $requestedEndDate,
+        ]);
+        dd($overlapCount);
     }
+
 
     public function getUserAssotiatedEvents()
     {
