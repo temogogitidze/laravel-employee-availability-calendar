@@ -16,7 +16,7 @@ class CalendarEventController extends Controller
     {
     }
 
-    public function store(StoreCalendarEventRequest $request)
+    public function store(StoreCalendarEventRequest $request): void
     {
         $validatedData = $request->validated();
 
@@ -28,13 +28,7 @@ class CalendarEventController extends Controller
         }
     }
 
-    public function index(IndexCalendarEventRequest $request): AnonymousResourceCollection
-    {
-        // get public holidays according user's country here and pass to resource
-        return CalendarEventResource::collection($this->getUserAssotiatedEvents());
-    }
-
-    public function isEmployeeAvailable($validatedData)
+    public function isEmployeeAvailable($validatedData): bool
     {
         $userId = 1;
         $requestedStartDate = $validatedData['start_date'];
@@ -57,9 +51,14 @@ class CalendarEventController extends Controller
             'startDate2' => $requestedStartDate,
             'endDate2' => $requestedEndDate,
         ]);
-        dd($overlapCount);
+        return !$overlapCount[0]->overlap_count > 0;
     }
 
+    public function index(IndexCalendarEventRequest $request): AnonymousResourceCollection
+    {
+        // get public holidays according user's country here and pass to resource
+        return CalendarEventResource::collection($this->getUserAssotiatedEvents());
+    }
 
     public function getUserAssotiatedEvents()
     {
