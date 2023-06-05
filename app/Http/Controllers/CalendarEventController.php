@@ -17,8 +17,15 @@ class CalendarEventController extends Controller
 
     public function store(StoreCalendarEventRequest $request): void
     {
-        $isEmployeeAvailable = $this->checkOverlap($request->validated(), $this->getUserAssotiatedEvents());
-        dd($isEmployeeAvailable);
+        $validatedData = $request->validated();
+
+        if ($this->isEmployeeAvailable($validatedData)) {
+            // Store the event in the database
+            dd('stored');
+//            $this->model->create($validatedData);
+        } else {
+            dd('employer is not available for chosen time section');
+        }
     }
 
     public function index(IndexCalendarEventRequest $request): AnonymousResourceCollection
@@ -27,27 +34,29 @@ class CalendarEventController extends Controller
         return CalendarEventResource::collection($this->getUserAssotiatedEvents());
     }
 
-    function checkOverlap($validatedData, $userEvents): string
+    function isEmployeeAvailable($validatedData): bool
+    {
+        $userEvents = $this->getUserAssotiatedEvents()->toArray();
+
+        return !$this->checkOverlapRecursive($validatedData, $userEvents);
+    }
+
+    function checkOverlapRecursive($validatedData, $userEvents): bool
+    {
+        return array_reduce($userEvents, function ($carry, $event) use ($validatedData) {
+            return $carry || $this->checkOverlap($validatedData, $event);
+        }, false);
+    }
+
+    function checkOverlap($validatedData, $userEvent): bool
     {
         $requestedStartDate = $validatedData['start_date'];
         $requestedEndDate = $validatedData['end_date'];
 
-        $isOverlapped = false;
+        $userStartDate = $userEvent['start_date'];
+        $userEndDate = $userEvent['end_date'];
 
-        foreach ($userEvents as $event) {
-            $userStartDate = $event->start_date;
-            $userEndDate = $event->end_date;
-            $isOverlapped = $this->isOverlapped($requestedStartDate, $requestedEndDate, $userStartDate, $userEndDate);
-            if ($isOverlapped) {
-                break;
-            }
-        }
-
-        return $isOverlapped ? "employer is not available for chosen time section" : "stored";
-    }
-    function isOverlapped($requestedStartDate, $requestedEndDate, $userStartDate, $userEndDate): bool
-    {
-        if ($requestedStartDate >= $userStartDate && $requestedStartDate <= $userEndDate) {
+        if ($requestedStartDate <= $userStartDate && $requestedEndDate >= $userEndDate) {
             return true;
         } elseif ($requestedEndDate >= $userStartDate && $requestedEndDate <= $userEndDate) {
             return true;
@@ -58,7 +67,7 @@ class CalendarEventController extends Controller
         }
     }
 
-    public function getUserAssotiatedEvents(): CalendarEvent
+    public function getUserAssotiatedEvents()
     {
         return $this->model->where('user_id', 1)->get();
     }
