@@ -17,37 +17,45 @@ class CalendarEventController extends Controller
 
     public function store(StoreCalendarEventRequest $request)
     {
-        $validatedData = $request->validated();
-
-        $userEvents = $this->getUserAssotiatedEvents();
-        $requestedStartDate = $validatedData['start_date'];
-        $requestedEndDate = $validatedData['end_date'];
-
-        foreach ($userEvents as $event) {
-            $userStartDate = $event->start_date;
-            $userEndDate = $event->end_date;
-
-            if ($requestedStartDate >= $userStartDate && $requestedStartDate <= $userEndDate) {
-                // Requested start date falls within the user's booked time range
-                dd('employer is not available for chosen time section');
-            } elseif ($requestedEndDate >= $userStartDate && $requestedEndDate <= $userEndDate) {
-                // Requested end date falls within the user's booked time range
-                dd('employer is not available for chosen time section');
-            } elseif ($requestedStartDate < $userStartDate && $requestedEndDate > $userEndDate) {
-                // Requested start and end dates envelop the user's booked time range
-                dd('employer is not available for chosen time section');
-            } else {
-                // Requested dates are outside the user's booked time range
-                dd('stored succesfully');
-            }
-        }
-        return $this->model->create($validatedData);
+        $isEmployeeAvailable = $this->checkOverlap($request->validated(), $this->getUserAssotiatedEvents());
+        dd($isEmployeeAvailable);
     }
 
     public function index(IndexCalendarEventRequest $request): AnonymousResourceCollection
     {
         // get public holidays according user's country here and pass to resource
         return CalendarEventResource::collection($this->getUserAssotiatedEvents());
+    }
+
+    function checkOverlap($validatedData, $userEvents)
+    {
+        $requestedStartDate = $validatedData['start_date'];
+        $requestedEndDate = $validatedData['end_date'];
+
+        $isOverlapped = false;
+
+        foreach ($userEvents as $event) {
+            $userStartDate = $event->start_date;
+            $userEndDate = $event->end_date;
+            $isOverlapped = $this->isOverlapped($requestedStartDate, $requestedEndDate, $userStartDate, $userEndDate);
+            if ($isOverlapped) {
+                break;
+            }
+        }
+
+        return $isOverlapped ? "employer is not available for chosen time section" : "stored";
+    }
+    function isOverlapped($requestedStartDate, $requestedEndDate, $userStartDate, $userEndDate)
+    {
+        if ($requestedStartDate >= $userStartDate && $requestedStartDate <= $userEndDate) {
+            return true;
+        } elseif ($requestedEndDate >= $userStartDate && $requestedEndDate <= $userEndDate) {
+            return true;
+        } elseif ($requestedStartDate < $userStartDate && $requestedEndDate > $userEndDate) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function getUserAssotiatedEvents()
