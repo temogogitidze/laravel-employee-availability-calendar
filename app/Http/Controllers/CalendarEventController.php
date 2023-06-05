@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCalendarEventRequest;
 use App\Http\Resources\CalendarEventResource;
 use App\Models\CalendarEvent;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class CalendarEventController extends Controller
 {
@@ -15,47 +16,48 @@ class CalendarEventController extends Controller
     {
     }
 
-    public function store(StoreCalendarEventRequest $request)
+    public function store(StoreCalendarEventRequest $request): void
     {
-        $isEmployeeAvailable = $this->checkOverlap($request->validated(), $this->getUserAssotiatedEvents());
-        dd($isEmployeeAvailable);
+        $validatedData = $request->validated();
+
+        if ($this->isEmployeeAvailable($validatedData)) {
+            // Store the event in the database
+            dd('stored');
+        } else {
+            dd('employer is not available for the chosen time section');
+        }
+    }
+
+    public function isEmployeeAvailable($validatedData): bool
+    {
+        $userId = 1;
+        $requestedStartDate = $validatedData['start_date'];
+        $requestedEndDate = $validatedData['end_date'];
+
+        $overlapCount = DB::select("
+        SELECT COUNT(*) AS overlap_count
+        FROM calendar_events
+        WHERE user_id = :userId
+        AND (
+            (start_date <= :endDate AND end_date >= :startDate)
+            OR (end_date >= :startDate1 AND end_date <= :endDate1)
+            OR (start_date < :startDate2 AND end_date > :endDate2)
+        )", [
+            'userId' => $userId,
+            'startDate' => $requestedStartDate,
+            'endDate' => $requestedEndDate,
+            'startDate1' => $requestedStartDate,
+            'endDate1' => $requestedEndDate,
+            'startDate2' => $requestedStartDate,
+            'endDate2' => $requestedEndDate,
+        ]);
+        return !$overlapCount[0]->overlap_count > 0;
     }
 
     public function index(IndexCalendarEventRequest $request): AnonymousResourceCollection
     {
         // get public holidays according user's country here and pass to resource
         return CalendarEventResource::collection($this->getUserAssotiatedEvents());
-    }
-
-    function checkOverlap($validatedData, $userEvents)
-    {
-        $requestedStartDate = $validatedData['start_date'];
-        $requestedEndDate = $validatedData['end_date'];
-
-        $isOverlapped = false;
-
-        foreach ($userEvents as $event) {
-            $userStartDate = $event->start_date;
-            $userEndDate = $event->end_date;
-            $isOverlapped = $this->isOverlapped($requestedStartDate, $requestedEndDate, $userStartDate, $userEndDate);
-            if ($isOverlapped) {
-                break;
-            }
-        }
-
-        return $isOverlapped ? "employer is not available for chosen time section" : "stored";
-    }
-    function isOverlapped($requestedStartDate, $requestedEndDate, $userStartDate, $userEndDate)
-    {
-        if ($requestedStartDate >= $userStartDate && $requestedStartDate <= $userEndDate) {
-            return true;
-        } elseif ($requestedEndDate >= $userStartDate && $requestedEndDate <= $userEndDate) {
-            return true;
-        } elseif ($requestedStartDate < $userStartDate && $requestedEndDate > $userEndDate) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     public function getUserAssotiatedEvents()
