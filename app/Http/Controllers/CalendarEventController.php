@@ -20,25 +20,27 @@ class CalendarEventController extends Controller
         $validatedData = $request->validated();
 
         $userEvents = $this->getUserAssotiatedEvents();
-        $userStartDate = $userEvents->start_date;
-        $userEndDate = $userEvents->end_date;
         $requestedStartDate = $validatedData['start_date'];
         $requestedEndDate = $validatedData['end_date'];
 
-        if ($requestedStartDate >= $userStartDate && $requestedStartDate <= $userEndDate) {
-            // Requested start date falls within the user's booked time range
-            dd('employer is not available for chosen time section');
-        } elseif ($requestedEndDate >= $userStartDate && $requestedEndDate <= $userEndDate) {
-            // Requested end date falls within the user's booked time range
-            dd('employer is not available for chosen time section');
-        } elseif ($requestedStartDate < $userStartDate && $requestedEndDate > $userEndDate) {
-            // Requested start and end dates envelop the user's booked time range
-            dd('employer is not available for chosen time section');
-        } else {
-            // Requested dates are outside the user's booked time range
-            dd('stored succesfully');
-        }
+        foreach ($userEvents as $event) {
+            $userStartDate = $event->start_date;
+            $userEndDate = $event->end_date;
 
+            if ($requestedStartDate >= $userStartDate && $requestedStartDate <= $userEndDate) {
+                // Requested start date falls within the user's booked time range
+                dd('employer is not available for chosen time section');
+            } elseif ($requestedEndDate >= $userStartDate && $requestedEndDate <= $userEndDate) {
+                // Requested end date falls within the user's booked time range
+                dd('employer is not available for chosen time section');
+            } elseif ($requestedStartDate < $userStartDate && $requestedEndDate > $userEndDate) {
+                // Requested start and end dates envelop the user's booked time range
+                dd('employer is not available for chosen time section');
+            } else {
+                // Requested dates are outside the user's booked time range
+                dd('stored succesfully');
+            }
+        }
         return $this->model->create($validatedData);
     }
 
@@ -50,7 +52,7 @@ class CalendarEventController extends Controller
 
     public function getUserAssotiatedEvents()
     {
-        return $this->model->where('user_id', 1)->get()->first();
+        return $this->model->where('user_id', 1)->get();
     }
 
     // update value should be converted in unix timestamp and compared in events table records for request user
